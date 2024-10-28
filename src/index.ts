@@ -453,6 +453,7 @@ export function apply(ctx: Context, config: Config) {
         participant.voted = true;
         participant.vote = currentVote;
         await session.send(`${session.username} 已投票。`);
+        await session.bot.sendMessage(fixedChannelId, `${session.username} 已投票。`);
       } else {
           await session.send('您已经投过票了。');
           return;
@@ -485,19 +486,21 @@ export function apply(ctx: Context, config: Config) {
       const evilWins = game.missionResults.filter(result => !result).length >= 3;
   
       if (goodWins) {
-        await session.send('好人阵营即将胜利！');
+        await session.bot.sendMessage(fixedChannelId, '好人阵营即将胜利！');
 
         const assassin = game.players.find(player => player.role === '刺客');
         if (assassin) {
-          await session.send(`刺客 ${assassin.name}，请您选择您认为的梅林进行刺杀。输入"阿瓦隆 刺杀 玩家名"`);
+          const assassinTime = `刺客 ${assassin.name}，请您选择您认为的梅林进行刺杀。输入"阿瓦隆 刺杀 玩家名"`;
+          await session.bot.sendMessage(fixedChannelId, assassinTime);
         }
     } else if (evilWins) {
-        await session.send('坏人阵营胜利！游戏已结束。');
+        await session.bot.sendMessage(fixedChannelId, '坏人阵营胜利！游戏已结束。');
         fixedChannelId = '';
         game.started = false;
     } else if (game.round < 5) {
         game.currentLeaderIndex = (game.currentLeaderIndex + 1) % game.players.length;
-        await session.send(`轮到下一位发车人：${game.players[game.currentLeaderIndex].name}。\n当前为第 ${game.round} 轮任务，需要 ${missionSize} 名成员参与。`);
+        const leaderMessage = `轮到下一位发车人：${game.players[game.currentLeaderIndex].name}。\n当前为第 ${game.round} 轮任务，需要 ${missionSize} 名成员参与。`;
+        await session.bot.sendMessage(fixedChannelId, leaderMessage);
       }
     });
   
@@ -536,10 +539,10 @@ export function apply(ctx: Context, config: Config) {
         return;
       }
 
-      const identityMessage = `${targetPlayer.name} 是${targetPlayer.team === 'good' ? '好人阵营' : '坏人阵营'}`;
-    
+      const identityMessage = `${targetPlayer.name}是${targetPlayer.team === 'good' ? '好人阵营' : '坏人阵营'}`;
+      const channelMessage = `车长查验了${targetPlayer.name}的身份，他可以选择公开或不公开。'}`;
       await session.send(identityMessage);
-    
+      await session.bot.sendMessage(fixedChannelId, channelMessage);
       currentLeader.voted = true;
     });
 
@@ -586,6 +589,5 @@ export function apply(ctx: Context, config: Config) {
       fixedChannelId = '';
       return;
     });
-
 
 }
