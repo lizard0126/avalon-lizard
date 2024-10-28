@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-avalon-lizard",
   "description": "用你的机器人玩一局阿瓦隆吧~",
-  "version": "0.0.1",
+  "version": "0.0.2-beta.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lizard0126/avalon-lizard.git"
@@ -17,6 +17,7 @@
     "chatbot",
     "koishi",
     "plugin",
+    "阿瓦隆",
     "game"
   ],
   "peerDependencies": {
@@ -24,7 +25,9 @@
   },
   "koishi": {
     "service": {
-      "required": ["database"]
+      "required": [
+        "database"
+      ]
     },
     "preview": true
   }

@@ -7,13 +7,12 @@ export const usage = `
 
 ## 阿瓦隆游戏规则
 <details>
-### 游戏目标：
 
+### 游戏目标：
   - 好人阵营：成功完成 3 次任务。
          
   - 坏人阵营：使 3 次任务失败，或成功刺杀梅林。
 ### 游戏流程：
-
   - 游戏开始后，玩家需要通过指令“阿瓦隆 加入”加入游戏。
 
   - 在满足玩家人数（5到11人）后，使用“阿瓦隆 分配”指令进行角色分配。
@@ -26,16 +25,20 @@ export const usage = `
 
   - 最多5轮任务后，游戏结束。
 ### 刺杀机制：
-
   - 刺客可以在任何时候刺杀梅林，需要自行判断身份。
 
   - 若刺杀成功，坏人阵营胜利；若刺杀失败，好人阵营胜利。
 
   - 刺杀一旦执行，游戏立即结束。
+### 湖中仙女：
+  - 游戏人数为8到11人时，引入湖中仙女规则。
+
+  - 在第二、三、四轮任务发车前，车长持有湖中仙女，可以查验任意一人身份。
 ---
 ### 注意：游戏过程中请遵守游戏规则，确保公平公正。祝你游戏愉快！
 </details>
 
+## 此插件仍在开发测试中，如遇到bug请[点此](https://github.com/lizard0126/avalon-lizard.git)反馈
 ## todo：
 - 添加房间系统，防止串号
 
@@ -121,14 +124,19 @@ export function apply(ctx: Context, config: Config) {
  - 参与任务的玩家使用“阿瓦隆 投票”指令对任务成功与否进行投票。
  - 最多5轮任务后，游戏结束。
 
- 3. 刺杀机制：
+3. 刺杀机制：
  - 刺客可以在任何时候刺杀梅林，需要自行判断身份。
  - 若刺杀成功，坏人阵营胜利；若刺杀失败，好人阵营胜利。
  - 刺杀一旦执行，游戏立即结束。
 
+ 4. 湖中仙女：
+ - 游戏人数为8到11人时，引入湖中仙女规则。
+ - 在第二、三、四轮任务发车前，车长持有湖中仙女，可以使用“阿瓦隆 查验”指令查验任意一人身份。
+
 注意：游戏过程中请遵守游戏规则，确保公平公正。祝你游戏愉快！`;
 
       await session.send(rules);
+      return;
     });
 
   avalonCommand
@@ -212,10 +220,18 @@ export function apply(ctx: Context, config: Config) {
       }
     });
 
+  let fixedChannelId = '';
+
   avalonCommand
     .subcommand('.开始', '开始新的一局阿瓦隆')
     .action(async ({ session }) => {
-      if (game.started) return session.send('游戏已经开始，请先结束当前游戏。');
+      if (game.started) {
+        await  session.send('游戏已经开始，请先结束当前游戏。');
+        return;
+      }
+      
+      fixedChannelId = session.channelId;
+
       game = {
         players: [],
         missionResults: [],
@@ -226,16 +242,24 @@ export function apply(ctx: Context, config: Config) {
         maxRounds: 5,
         currentVotes: {},
       };
-      await session.send('阿瓦隆游戏开始！请输入"阿瓦隆 加入"加入游戏。');
+      await session.send('阿瓦隆游戏开始，建议更换一个简单的群昵称。输入"阿瓦隆 加入"加入游戏。');
       return;
     });
 
   avalonCommand
     .subcommand('.加入', '加入当前的阿瓦隆对局')
     .action(async ({ session }) => {
-      if (!game.started) return session.send('游戏尚未开始，请先用"阿瓦隆 开始"开始游戏。');
+      if (!game.started) {
+        await session.send('游戏尚未开始，请先用"阿瓦隆 开始"开始游戏。');
+        return;
+      }
+
       const playerExists = game.players.some(p => p.id === session.userId);
-      if (playerExists) return session.send('你已经加入了游戏。');
+      if (playerExists) {
+        await session.send('你已经加入了游戏。');
+        return;
+      }
+
       game.players.push({ id: session.userId, name: session.username });
       await session.send(`${session.username} 已加入游戏！目前玩家数: ${game.players.length}`);
       return;
@@ -244,6 +268,11 @@ export function apply(ctx: Context, config: Config) {
   avalonCommand
     .subcommand('.分配', '分配阿瓦隆角色')
     .action(async ({ session }) => {
+      if (!game.started) {
+        await session.send('游戏尚未开始，请先用"阿瓦隆 开始"开始游戏。');
+        return;
+      }
+
       const numPlayers = game.players.length;
       if (numPlayers < 5 || numPlayers > 11) {
         await session.send('玩家人数不满足要求，至少需要5名玩家，最多支持11名玩家。');
@@ -332,14 +361,20 @@ export function apply(ctx: Context, config: Config) {
       game.round = 1;
     game.currentLeaderIndex = Math.floor(Math.random() * game.players.length);
     const missionSize = missionSizes[numPlayers][game.round - 1];
-    await session.send(`角色已分配！游戏即将开始。第 ${game.round} 轮任务需要 ${missionSize} 名成员参与。当前发车人是：${game.players[game.currentLeaderIndex].name}`);
+    await session.send(
+      `角色已分配！游戏即将开始。第 ${game.round} 轮任务需要 ${missionSize} 名成员参与。
+      \n当前发车人是：${game.players[game.currentLeaderIndex].name}，请在当前群聊使用指令“阿瓦隆 发车 玩家1,玩家2”进行选择
+      `);
     return;
   });
 
   avalonCommand
-    .subcommand('.发车 <players:string>', '选择任务成员，格式：阿瓦隆 发车 玩家1,玩家2,...（用英文逗号隔开）')
+    .subcommand('.发车 <players:string>', '选择任务成员')
     .action(async ({ session }, players) => {
-      if (!game.started) return session.send('游戏尚未开始，请先开始游戏。');
+      if (!game.started) {
+        await session.send('游戏尚未开始，请先开始游戏。');
+        return;
+      }
 
       const currentLeader = game.players[game.currentLeaderIndex];
       if (session.userId !== currentLeader.id) {
@@ -350,20 +385,22 @@ export function apply(ctx: Context, config: Config) {
       if (game.round > 0 && game.currentVotes) {
         const allVoted = Object.values(game.currentVotes).every(vote => vote !== undefined);
         if (!allVoted) {
-          return session.send(`上一轮的投票尚未完成，无法进行新一轮的上车。`);
+          await session.send(`上一轮的投票尚未完成，无法进行新一轮的上车。`);
+          return;
         }
       }
       
       if (!players) {
-        await session.send('请选择参与任务的玩家，例如：阿瓦隆 上车 玩家1,玩家2（用英文逗号隔开）');
+        await session.send('请使用指令“阿瓦隆 发车 玩家1,玩家2”选择参与任务的玩家！');
         return;
       }
 
+      const normalizedPlayers = players.replace(/，/g, ',');
+      const selectedNames = normalizedPlayers.split(',').map(name => name.trim()).filter(name => name);
       const numPlayers = game.players.length;
       const missionSize = missionSizes[numPlayers][game.round - 1];
-      session.send(`第 ${game.round} 轮任务，当前需要 ${missionSize} 名玩家参与。`);
+      await session.send(`开始第 ${game.round} 轮任务，当前需要 ${missionSize} 名玩家参与。`);
     
-      const selectedNames = players.split(',').map(name => name.trim()).filter(name => name);
       const selectedIds = selectedNames.map(name => {
         const player = game.players.find(p => p.name.toLowerCase() === name.toLowerCase());
         return player ? player.id : null;
@@ -375,16 +412,14 @@ export function apply(ctx: Context, config: Config) {
       }
 
       game.selectedPlayers = game.players.filter(p => selectedIds.includes(p.id));
-      game.round++;
-      game.missionResults.push(false);
-
-      const message = `任务成员选择完毕: ${selectedNames.join(', ')}。请投票决定任务成功与否。`;
-      session.send(message);
-
       game.players.forEach(player => {
         player.voted = false;
         player.vote = undefined;
       });
+      game.missionResults.push(false);
+
+      const message = `任务成员选择完毕: ${selectedNames.join(', ')}。请投票决定任务成功与否。`;
+      session.send(message);
 
       game.selectedPlayers.forEach(player => {
         session.send(`${player.name} 请投票，输入 "阿瓦隆 投票 成功" 或 "阿瓦隆 投票 失败"`);
@@ -394,13 +429,22 @@ export function apply(ctx: Context, config: Config) {
   avalonCommand
     .subcommand('.投票 <vote:string>', '投票决定任务成功与否')
     .action(async ({ session }, vote) => {
-      if (!game.started) return session.send('游戏尚未开始，请先开始游戏。');
+      if (!game.started) {
+        await session.send('游戏尚未开始，请先开始游戏。');
+        return;
+        }
   
       const isParticipant = game.selectedPlayers.some(player => player.id === session.userId);
-      if (!isParticipant) return session.send('只有参与任务的玩家可以投票。');
+      if (!isParticipant) {
+        await session.send('只有参与任务的玩家可以投票。');
+        return;
+        }
   
       const validVotes = ['成功', '失败'];
-      if (!validVotes.includes(vote)) return session.send('投票无效，请输入 "阿瓦隆 投票 成功" 或 "阿瓦隆 投票 失败"');
+      if (!validVotes.includes(vote)) {
+        await session.send('投票无效，请输入 "阿瓦隆 投票 成功" 或 "阿瓦隆 投票 失败"');
+        return;
+        }
   
       const currentVote = vote === '成功' ? 'success' : 'fail';
   
@@ -410,7 +454,8 @@ export function apply(ctx: Context, config: Config) {
         participant.vote = currentVote;
         await session.send(`${session.username} 已投票。`);
       } else {
-        return session.send('您已经投过票了。');
+          await session.send('您已经投过票了。');
+          return;
       }
   
       const allVoted = game.selectedPlayers.every(player => player.voted);
@@ -420,67 +465,127 @@ export function apply(ctx: Context, config: Config) {
       const failVotes = game.selectedPlayers.filter(player => player.vote === 'fail').length;
       const missionSize = missionSizes[game.players.length][game.round - 1];
   
-      let missionSuccess = failVotes < missionSize;
+      let missionSuccess;
+
+      if (game.round === 4 && [7, 8, 9, 10, 11].includes(game.players.length)) {
+        missionSuccess = failVotes < 2;
+      } else {
+        missionSuccess = failVotes === 0;
+      }
+
       game.missionResults[game.round - 1] = missionSuccess;
   
       const resultsMessage = `投票结果：成功票: ${passVotes}，失败票: ${failVotes}`;
-      await session.send(resultsMessage);
-      await session.send(missionSuccess ? '任务成功！' : '任务失败！');
-  
+      await session.bot.sendMessage(fixedChannelId, resultsMessage);
+      await session.bot.sendMessage(fixedChannelId, missionSuccess ? '任务成功！' : '任务失败！');
+
+      game.round++;
+
       const goodWins = game.missionResults.filter(result => result).length >= 3;
       const evilWins = game.missionResults.filter(result => !result).length >= 3;
   
       if (goodWins) {
-        await session.send('好人阵营胜利！游戏结束。');
-        game.started = false;
+        await session.send('好人阵营即将胜利！');
 
-        if (game.round >= 5) {
-            const assassin = game.players.find(player => player.role === '刺客');
-            if (assassin) {
-                await session.send(`刺客 ${assassin.name}，您是否执行刺杀指令？（请回复 "是" 或 "否"）`);
-            }
+        const assassin = game.players.find(player => player.role === '刺客');
+        if (assassin) {
+          await session.send(`刺客 ${assassin.name}，请您选择您认为的梅林进行刺杀。输入"阿瓦隆 刺杀 玩家名"`);
         }
     } else if (evilWins) {
-        await session.send('坏人阵营胜利！游戏结束。');
+        await session.send('坏人阵营胜利！游戏已结束。');
+        fixedChannelId = '';
         game.started = false;
     } else if (game.round < 5) {
         game.currentLeaderIndex = (game.currentLeaderIndex + 1) % game.players.length;
-        await session.send(`轮到下一位发车人：${game.players[game.currentLeaderIndex].name}`);
-    } else {
-        game.currentLeaderIndex = (game.currentLeaderIndex + 1) % game.players.length;
-        await session.send(`轮到下一位发车人：${game.players[game.currentLeaderIndex].name}`);
-    }
-});
+        await session.send(`轮到下一位发车人：${game.players[game.currentLeaderIndex].name}。\n当前为第 ${game.round} 轮任务，需要 ${missionSize} 名成员参与。`);
+      }
+    });
   
-avalonCommand
-  .subcommand('.刺杀 <playerName:string>', '刺杀指定玩家')
-  .action(async ({ session }, playerName) => {
-    if (!game.started) return session.send('游戏尚未开始，请先开始游戏。');
+  avalonCommand
+    .subcommand('.查验 <playerName:string>', '持有湖中仙女的车长查验玩家身份')
+    .action(async ({ session }, playerName) => {
+      if (!game.started) {
+        await session.send('游戏尚未开始，请先开始游戏。');
+        return;
+      }
 
-    const assassin = game.players.find(p => p.role === '刺客' && p.id === session.userId);
-    if (!assassin) return session.send('你不是刺客，无法进行刺杀。');
+      if (!game || game.players.length < 8 || game.players.length > 11) {
+        await session.send('当前游戏人数不引入湖中仙女，不能查验。');
+        return;
+      }
 
-    const targetPlayer = game.players.find(p => p.name === playerName);
-    if (!targetPlayer) return session.send('未找到该玩家，请检查姓名拼写。');
+      if (game.round < 2 || game.round > 4) {
+        await session.send('当前任务轮数不引入湖中仙女，不能查验。');
+        return;
+      }
 
-    if (targetPlayer.role === '梅林') {
-      session.send(`刺杀成功！${targetPlayer.name} 是梅林，坏人阵营胜利！`);
-    } else {
-      session.send(`刺杀失败！${targetPlayer.name} 不是梅林，好人阵营胜利！`);
-    }
+      const currentLeader = game.players[game.currentLeaderIndex];
+      if (currentLeader.id !== session.userId) {
+        await session.send('只有当前的车长可以使用此指令。');
+        return;
+      }
 
-    game.started = false;
-    await session.send('本局阿瓦隆游戏结束。');
-    return;
-});
+      if (currentLeader.voted = true) {
+        await session.send('当前任务已使用查验功能。');
+        return;
+      }
 
+      const targetPlayer = game.players.find(p => p.name === playerName);
+      if (!targetPlayer) {
+        await session.send(`没有找到名为 ${playerName} 的玩家。`);
+        return;
+      }
+
+      const identityMessage = `${targetPlayer.name} 是${targetPlayer.team === 'good' ? '好人阵营' : '坏人阵营'}`;
+    
+      await session.send(identityMessage);
+    
+      currentLeader.voted = true;
+    });
+
+  avalonCommand
+    .subcommand('.刺杀 <playerName:string>', '刺杀指定玩家')
+    .action(async ({ session }, playerName) => {
+      if (!game.started) {
+        await session.send('游戏尚未开始，请先开始游戏。');
+        return;
+      }
+      const assassin = game.players.find(p => p.role === '刺客' && p.id === session.userId);
+      if (!assassin) {
+        await session.send('你不是刺客，无法进行刺杀。');
+        return;
+      }
+
+      const targetPlayer = game.players.find(p => p.name === playerName);
+      if (!targetPlayer) {
+        await session.send('未找到该玩家，请检查姓名拼写。');
+        return;
+      }
+
+      if (targetPlayer.role === '梅林') {
+        session.send(`刺杀成功！${targetPlayer.name} 是梅林，坏人阵营胜利！`);
+      } else {
+        session.send(`刺杀失败！${targetPlayer.name} 不是梅林，好人阵营胜利！`);
+      }
+
+      game.started = false;
+      await session.send('游戏已结束。');
+      fixedChannelId = '';
+      return;
+  });
 
   avalonCommand
     .subcommand('.结束', '结束当前游戏')
     .action(async ({ session }) => {
-      if (!game.started) return session.send('当前没有游戏进行中。');
+      if (!game.started) {
+        await session.send('当前没有游戏进行中。');
+        return;
+      }
       game.started = false;
       await session.send('游戏已结束。');
+      fixedChannelId = '';
       return;
     });
+
+
 }
