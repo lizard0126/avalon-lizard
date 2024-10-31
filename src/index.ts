@@ -48,7 +48,7 @@ export const usage = `
 
 `;
 
-export interface Config {}
+export interface Config { }
 
 export const Config = Schema.object({});
 
@@ -226,10 +226,10 @@ export function apply(ctx: Context, config: Config) {
     .subcommand('.开始', '开始新的一局阿瓦隆')
     .action(async ({ session }) => {
       if (game.started) {
-        await  session.send('游戏已经开始，请先结束当前游戏。');
+        await session.send('游戏已经开始，请先结束当前游戏。');
         return;
       }
-      
+
       fixedChannelId = session.channelId;
 
       game = {
@@ -278,19 +278,19 @@ export function apply(ctx: Context, config: Config) {
         await session.send('玩家人数不满足要求，至少需要5名玩家，最多支持11名玩家。');
         return;
       }
-  
+
       const { good, evil } = roleDistribution[numPlayers];
       const shuffledPlayers = [...game.players].sort(() => Math.random() - 0.5);
       const numGood = good.length;
-  
+
       shuffledPlayers.forEach((player, index) => {
         player.role = index < numGood ? good[index] : evil[index - numGood];
         player.team = index < numGood ? 'good' : 'evil';
       });
-  
+
       for (const player of shuffledPlayers) {
         let message = `你的角色是：${player.role}，你是${player.team === 'good' ? '好人阵营' : '坏人阵营'}`;
-  
+
         switch (player.role) {
           case '梅林':
             const merlinVisibleEvil = shuffledPlayers
@@ -300,7 +300,7 @@ export function apply(ctx: Context, config: Config) {
             message += `\n\n你只能投任务成功。`;
             message += `\n\n除了莫德雷德，其他坏人有：${merlinVisibleEvil.map(p => p.name).join(', ')}`;
             break;
-  
+
           case '派西维尔':
             const merlinAndMorgana = shuffledPlayers
               .filter(p => ['梅林', '莫甘娜'].includes(p.role))
@@ -309,7 +309,7 @@ export function apply(ctx: Context, config: Config) {
             message += `\n\n你只能投任务成功。`;
             message += `\n\n你可以看到的两个玩家是：${merlinAndMorgana.map(p => p.name).join(', ')}，但你不知道谁是梅林，谁是莫甘娜。`;
             break;
-  
+
           case '忠臣':
             message += `。\n\n你的任务是保护梅林，取得最终胜利。`;
             message += `\n\n你只能投任务成功。`;
@@ -326,13 +326,13 @@ export function apply(ctx: Context, config: Config) {
             message += `\n\n你可以投任务成功，也可以投任务失败。`;
             message += `\n\n除了奥伯伦，其他坏人有：${evilVisibleOthers.map(p => p.name).join(', ')}`;
             break;
-  
+
           case '奥伯伦':
             message += `。\n\n你的任务是破坏任务，取得最终胜利。`;
             message += `\n\n你可以投任务成功，也可以投任务失败。`;
             message += '\n\n你是独立的坏人，无法看到其他坏人。';
             break;
-  
+
           case '好兰斯洛特':
             const evilLancelot = shuffledPlayers.find(p => p.role === '坏兰斯洛特');
             if (evilLancelot) {
@@ -341,7 +341,7 @@ export function apply(ctx: Context, config: Config) {
             message += `\n\n你的任务是破坏任务，取得最终胜利。`;
             message += `\n\n你可以投任务成功，也可以投任务失败。`;
             break;
-  
+
           case '坏兰斯洛特':
             const goodLancelot = shuffledPlayers.find(p => p.role === '好兰斯洛特');
             if (goodLancelot) {
@@ -350,23 +350,23 @@ export function apply(ctx: Context, config: Config) {
             message += `\n\n你的任务是破坏任务，取得最终胜利。`;
             message += `\n\n你可以投任务成功，也可以投任务失败。`;
             break;
-  
+
           default:
             break;
         }
-  
+
         await session.bot.sendPrivateMessage(player.id, message);
       }
-  
+
       game.round = 1;
-    game.currentLeaderIndex = Math.floor(Math.random() * game.players.length);
-    const missionSize = missionSizes[numPlayers][game.round - 1];
-    await session.send(
-      `角色已分配！游戏即将开始。第 ${game.round} 轮任务需要 ${missionSize} 名成员参与。
+      game.currentLeaderIndex = Math.floor(Math.random() * game.players.length);
+      const missionSize = missionSizes[numPlayers][game.round - 1];
+      await session.send(
+        `角色已分配！游戏即将开始。第 ${game.round} 轮任务需要 ${missionSize} 名成员参与。
       \n当前发车人是：${game.players[game.currentLeaderIndex].name}，请在当前群聊使用指令“阿瓦隆 发车 玩家1,玩家2”进行选择
       `);
-    return;
-  });
+      return;
+    });
 
   avalonCommand
     .subcommand('.发车 <players:string>', '选择任务成员')
@@ -389,7 +389,7 @@ export function apply(ctx: Context, config: Config) {
           return;
         }
       }
-      
+
       if (!players) {
         await session.send('请使用指令“阿瓦隆 发车 玩家1,玩家2”选择参与任务的玩家！');
         return;
@@ -400,7 +400,7 @@ export function apply(ctx: Context, config: Config) {
       const numPlayers = game.players.length;
       const missionSize = missionSizes[numPlayers][game.round - 1];
       await session.send(`开始第 ${game.round} 轮任务，当前需要 ${missionSize} 名玩家参与。`);
-    
+
       const selectedIds = selectedNames.map(name => {
         const player = game.players.find(p => p.name.toLowerCase() === name.toLowerCase());
         return player ? player.id : null;
@@ -432,22 +432,22 @@ export function apply(ctx: Context, config: Config) {
       if (!game.started) {
         await session.send('游戏尚未开始，请先开始游戏。');
         return;
-        }
-  
+      }
+
       const isParticipant = game.selectedPlayers.some(player => player.id === session.userId);
       if (!isParticipant) {
         await session.send('只有参与任务的玩家可以投票。');
         return;
-        }
-  
+      }
+
       const validVotes = ['成功', '失败'];
       if (!validVotes.includes(vote)) {
         await session.send('投票无效，请输入 "阿瓦隆 投票 成功" 或 "阿瓦隆 投票 失败"');
         return;
-        }
-  
+      }
+
       const currentVote = vote === '成功' ? 'success' : 'fail';
-  
+
       const participant = game.selectedPlayers.find(player => player.id === session.userId);
       if (!participant.voted) {
         participant.voted = true;
@@ -455,17 +455,17 @@ export function apply(ctx: Context, config: Config) {
         await session.send(`${session.username} 已投票。`);
         await session.bot.sendMessage(fixedChannelId, `${session.username} 已投票。`);
       } else {
-          await session.send('您已经投过票了。');
-          return;
+        await session.send('您已经投过票了。');
+        return;
       }
-  
+
       const allVoted = game.selectedPlayers.every(player => player.voted);
       if (!allVoted) return;
-  
+
       const passVotes = game.selectedPlayers.filter(player => player.vote === 'success').length;
       const failVotes = game.selectedPlayers.filter(player => player.vote === 'fail').length;
       const missionSize = missionSizes[game.players.length][game.round - 1];
-  
+
       let missionSuccess;
 
       if (game.round === 4 && [7, 8, 9, 10, 11].includes(game.players.length)) {
@@ -475,7 +475,7 @@ export function apply(ctx: Context, config: Config) {
       }
 
       game.missionResults[game.round - 1] = missionSuccess;
-  
+
       const resultsMessage = `投票结果：成功票: ${passVotes}，失败票: ${failVotes}`;
       await session.bot.sendMessage(fixedChannelId, resultsMessage);
       await session.bot.sendMessage(fixedChannelId, missionSuccess ? '任务成功！' : '任务失败！');
@@ -484,7 +484,7 @@ export function apply(ctx: Context, config: Config) {
 
       const goodWins = game.missionResults.filter(result => result).length >= 3;
       const evilWins = game.missionResults.filter(result => !result).length >= 3;
-  
+
       if (goodWins) {
         await session.bot.sendMessage(fixedChannelId, '好人阵营即将胜利！');
 
@@ -493,17 +493,17 @@ export function apply(ctx: Context, config: Config) {
           const assassinTime = `刺客 ${assassin.name}，请您选择您认为的梅林进行刺杀。输入"阿瓦隆 刺杀 玩家名"`;
           await session.bot.sendMessage(fixedChannelId, assassinTime);
         }
-    } else if (evilWins) {
+      } else if (evilWins) {
         await session.bot.sendMessage(fixedChannelId, '坏人阵营胜利！游戏已结束。');
         fixedChannelId = '';
         game.started = false;
-    } else if (game.round < 5) {
+      } else if (game.round < 5) {
         game.currentLeaderIndex = (game.currentLeaderIndex + 1) % game.players.length;
         const leaderMessage = `轮到下一位发车人：${game.players[game.currentLeaderIndex].name}。\n当前为第 ${game.round} 轮任务，需要 ${missionSize} 名成员参与。`;
         await session.bot.sendMessage(fixedChannelId, leaderMessage);
       }
     });
-  
+
   avalonCommand
     .subcommand('.查验 <playerName:string>', '持有湖中仙女的车长查验玩家身份')
     .action(async ({ session }, playerName) => {
@@ -575,7 +575,7 @@ export function apply(ctx: Context, config: Config) {
       await session.send('游戏已结束。');
       fixedChannelId = '';
       return;
-  });
+    });
 
   avalonCommand
     .subcommand('.结束', '结束当前游戏')
