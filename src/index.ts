@@ -282,16 +282,16 @@ export function apply(ctx: Context, config: Config) {
       const numGood = good.length;
 
       const roleImages = {
-        '梅林': pathToFileURL(resolve(__dirname, 'assets/ml.jpg')).href,
-        '派西维尔': pathToFileURL(resolve(__dirname, 'assets/pxwe.jpg')).href,
-        '忠臣': pathToFileURL(resolve(__dirname, 'assets/zc.jpg')).href,
-        '莫甘娜': pathToFileURL(resolve(__dirname, 'assets/mgn.jpg')).href,
-        '刺客': pathToFileURL(resolve(__dirname, 'assets/blslt.jpg')).href,
-        '爪牙': pathToFileURL(resolve(__dirname, 'assets/zy.jpg')).href,
-        '莫德雷德': pathToFileURL(resolve(__dirname, 'assets/mdld.jpg')).href,
-        '奥伯伦': pathToFileURL(resolve(__dirname, 'assets/abl.jpg')).href,
-        '好兰斯洛特': pathToFileURL(resolve(__dirname, 'assets/glslt.jpg')).href,
-        '坏兰斯洛特': pathToFileURL(resolve(__dirname, 'assets/blslt.jpg')).href
+        '梅林': pathToFileURL(resolve(__dirname, '../assets/ml.jpg')).href,
+        '派西维尔': pathToFileURL(resolve(__dirname, '../assets/pxwe.jpg')).href,
+        '忠臣': pathToFileURL(resolve(__dirname, '../assets/zc.jpg')).href,
+        '莫甘娜': pathToFileURL(resolve(__dirname, '../assets/mgn.jpg')).href,
+        '刺客': pathToFileURL(resolve(__dirname, '../assets/blslt.jpg')).href,
+        '爪牙': pathToFileURL(resolve(__dirname, '../assets/zy.jpg')).href,
+        '莫德雷德': pathToFileURL(resolve(__dirname, '../assets/mdld.jpg')).href,
+        '奥伯伦': pathToFileURL(resolve(__dirname, '../assets/abl.jpg')).href,
+        '好兰斯洛特': pathToFileURL(resolve(__dirname, '../assets/glslt.jpg')).href,
+        '坏兰斯洛特': pathToFileURL(resolve(__dirname, '../assets/blslt.jpg')).href
       };
 
       shuffledPlayers.forEach((player, index) => {
