@@ -1,4 +1,6 @@
-import { Context, Schema } from 'koishi';
+import { Context, Schema, h } from 'koishi';
+import { pathToFileURL } from 'url';
+import { resolve } from 'path';
 // npm publish --workspace koishi-plugin-avalon-lizard --access public --registry https://registry.npmjs.org
 export const inject = ['database'];
 export const name = 'avalon-lizard';
@@ -39,12 +41,8 @@ export const usage = `
 </details>
 
 ## 此插件仍在开发测试中，如遇到bug请[点此](https://github.com/lizard0126/avalon-lizard.git)反馈
-## todo：
-- 添加房间系统，防止串号
-
-- 完善规则，添加湖中仙女
-
-- 添加图片，完善视觉效果
+---
+#### 喜欢我的插件可以[请我喝可乐](https://ifdian.net/a/lizard0126)，没准就有动力更新新功能了
 
 `;
 
@@ -283,20 +281,33 @@ export function apply(ctx: Context, config: Config) {
       const shuffledPlayers = [...game.players].sort(() => Math.random() - 0.5);
       const numGood = good.length;
 
+      const roleImages = {
+        '梅林': pathToFileURL(resolve(__dirname, 'assets/ml.jpg')).href,
+        '派西维尔': pathToFileURL(resolve(__dirname, 'assets/pxwe.jpg')).href,
+        '忠臣': pathToFileURL(resolve(__dirname, 'assets/zc.jpg')).href,
+        '莫甘娜': pathToFileURL(resolve(__dirname, 'assets/mgn.jpg')).href,
+        '刺客': pathToFileURL(resolve(__dirname, 'assets/blslt.jpg')).href,
+        '爪牙': pathToFileURL(resolve(__dirname, 'assets/zy.jpg')).href,
+        '莫德雷德': pathToFileURL(resolve(__dirname, 'assets/mdld.jpg')).href,
+        '奥伯伦': pathToFileURL(resolve(__dirname, 'assets/abl.jpg')).href,
+        '好兰斯洛特': pathToFileURL(resolve(__dirname, 'assets/glslt.jpg')).href,
+        '坏兰斯洛特': pathToFileURL(resolve(__dirname, 'assets/glslt.jpg')).href // 如果相同可以合并
+      };
+
       shuffledPlayers.forEach((player, index) => {
         player.role = index < numGood ? good[index] : evil[index - numGood];
         player.team = index < numGood ? 'good' : 'evil';
       });
 
       for (const player of shuffledPlayers) {
-        let message = `你的角色是：${player.role}，你是${player.team === 'good' ? '好人阵营' : '坏人阵营'}`;
+        let message = `你的角色是：${player.role}，你是${player.team === 'good' ? '好人阵营' : '坏人阵营'}。`;
 
         switch (player.role) {
           case '梅林':
             const merlinVisibleEvil = shuffledPlayers
               .filter(p => p.team === 'evil' && p.role !== '莫德雷德')
               .sort(() => Math.random() - 0.5);
-            message += `。\n\n你的任务是隐藏自己的身份，避免被刺客发现，取得最终胜利。`;
+            message += `\n\n你的任务是隐藏自己的身份，避免被刺客发现，取得最终胜利。`;
             message += `\n\n你只能投任务成功。`;
             message += `\n\n除了莫德雷德，其他坏人有：${merlinVisibleEvil.map(p => p.name).join(', ')}`;
             break;
@@ -305,13 +316,13 @@ export function apply(ctx: Context, config: Config) {
             const merlinAndMorgana = shuffledPlayers
               .filter(p => ['梅林', '莫甘娜'].includes(p.role))
               .sort(() => Math.random() - 0.5);
-            message += `。\n\n你的任务是保护梅林，取得最终胜利。`;
+            message += `\n\n你的任务是保护梅林，取得最终胜利。`;
             message += `\n\n你只能投任务成功。`;
             message += `\n\n你可以看到的两个玩家是：${merlinAndMorgana.map(p => p.name).join(', ')}，但你不知道谁是梅林，谁是莫甘娜。`;
             break;
 
           case '忠臣':
-            message += `。\n\n你的任务是保护梅林，取得最终胜利。`;
+            message += `\n\n你的任务是保护梅林，取得最终胜利。`;
             message += `\n\n你只能投任务成功。`;
             break;
 
@@ -322,13 +333,13 @@ export function apply(ctx: Context, config: Config) {
             const evilVisibleOthers = shuffledPlayers
               .filter(p => p.team === 'evil' && p.role !== '奥伯伦')
               .sort(() => Math.random() - 0.5);
-            message += `。\n\n你的任务是破坏任务，取得最终胜利。`;
+            message += `\n\n你的任务是破坏任务，取得最终胜利。`;
             message += `\n\n你可以投任务成功，也可以投任务失败。`;
             message += `\n\n除了奥伯伦，其他坏人有：${evilVisibleOthers.map(p => p.name).join(', ')}`;
             break;
 
           case '奥伯伦':
-            message += `。\n\n你的任务是破坏任务，取得最终胜利。`;
+            message += `\n\n你的任务是破坏任务，取得最终胜利。`;
             message += `\n\n你可以投任务成功，也可以投任务失败。`;
             message += '\n\n你是独立的坏人，无法看到其他坏人。';
             break;
@@ -336,7 +347,7 @@ export function apply(ctx: Context, config: Config) {
           case '好兰斯洛特':
             const evilLancelot = shuffledPlayers.find(p => p.role === '坏兰斯洛特');
             if (evilLancelot) {
-              message += `。\n\n你可以看到坏兰斯洛特是：${evilLancelot.name}`;
+              message += `\n\n你可以看到坏兰斯洛特是：${evilLancelot.name}`;
             }
             message += `\n\n你的任务是破坏任务，取得最终胜利。`;
             message += `\n\n你可以投任务成功，也可以投任务失败。`;
@@ -345,7 +356,7 @@ export function apply(ctx: Context, config: Config) {
           case '坏兰斯洛特':
             const goodLancelot = shuffledPlayers.find(p => p.role === '好兰斯洛特');
             if (goodLancelot) {
-              message += `。\n\n你可以看到好兰斯洛特是：${goodLancelot.name}`;
+              message += `\n\n你可以看到好兰斯洛特是：${goodLancelot.name}`;
             }
             message += `\n\n你的任务是破坏任务，取得最终胜利。`;
             message += `\n\n你可以投任务成功，也可以投任务失败。`;
@@ -354,8 +365,8 @@ export function apply(ctx: Context, config: Config) {
           default:
             break;
         }
-
-        await session.bot.sendPrivateMessage(player.id, message);
+        const imageUrl = roleImages[player.role];
+        await session.bot.sendPrivateMessage(player.id, `${h.image(imageUrl)}\n${message}`);
       }
 
       game.round = 1;
