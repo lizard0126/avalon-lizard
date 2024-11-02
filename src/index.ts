@@ -291,7 +291,7 @@ export function apply(ctx: Context, config: Config) {
         '莫德雷德': pathToFileURL(resolve(__dirname, 'assets/mdld.jpg')).href,
         '奥伯伦': pathToFileURL(resolve(__dirname, 'assets/abl.jpg')).href,
         '好兰斯洛特': pathToFileURL(resolve(__dirname, 'assets/glslt.jpg')).href,
-        '坏兰斯洛特': pathToFileURL(resolve(__dirname, 'assets/glslt.jpg')).href // 如果相同可以合并
+        '坏兰斯洛特': pathToFileURL(resolve(__dirname, 'assets/blslt.jpg')).href
       };
 
       shuffledPlayers.forEach((player, index) => {
