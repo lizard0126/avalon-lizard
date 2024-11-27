@@ -4,9 +4,8 @@
 
 ## 用你的机器人玩一局阿瓦隆吧~
 ---
-## 此插件仍在开发测试中，如遇到bug请[点此](https://github.com/lizard0126/avalon-lizard.git)反馈
-## 阿瓦隆游戏规则
 <details>
+<summary>阿瓦隆游戏规则</summary>
 
 ### 游戏目标：
   - 好人阵营：成功完成 3 次任务。
@@ -34,8 +33,8 @@
   - 游戏人数为8到11人时，引入湖中仙女规则。
 
   - 在第二、三、四轮任务发车前，车长持有湖中仙女，可以查验任意一人身份。
----
-### 注意：游戏过程中请遵守游戏规则，确保公平公正。祝你游戏愉快！
+
+### 游戏过程中请遵守游戏规则，确保公平公正。祝你游戏愉快！
 </details>
 
 ## 已经完成的：
@@ -52,4 +51,13 @@
 
 - 添加图片，完善视觉效果
 ---
-#### 喜欢我的插件可以[请我喝可乐](https://ifdian.net/a/lizard0126)，没准就有动力更新新功能了
+<details>
+<summary>如果要反馈建议或报告问题</summary>
+
+可以[点这里](https://github.com/lizard0126/avalon-lizard/issues)创建议题~
+</details>
+<details>
+<summary>如果喜欢我的插件</summary>
+
+可以[请我喝可乐](https://ifdian.net/a/lizard0126)，没准就有动力更新新功能了~
+</details>

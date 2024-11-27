@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-avalon-lizard",
   "description": "用你的机器人玩一局阿瓦隆吧~",
-  "version": "0.0.2-beta.8",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lizard0126/avalon-lizard.git"
@@ -29,7 +29,6 @@
       "required": [
         "database"
       ]
-    },
-    "preview": true
+    }
   }
 }
